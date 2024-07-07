@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -9,6 +10,9 @@ const io = new Server(server, {
     origin: '*',
   },
 });
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'build')));
 
 async function getNames(){
   const sockets = await io.fetchSockets();
@@ -137,7 +141,10 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Anything that doesn't match the above, send back index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
+
+const port = process.env.PORT || 4000;
+server.listen(port, () => console.log(`Listening on port ${port}`));
